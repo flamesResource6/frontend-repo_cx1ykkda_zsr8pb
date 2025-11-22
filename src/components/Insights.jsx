@@ -1,10 +1,31 @@
+import { useEffect, useState } from 'react'
+
 function Insights() {
-  const metrics = [
-    { label: 'EHR Feeds', value: '142', hint: '+12 this week' },
-    { label: 'Claims/day', value: '1.8M', hint: 'EDI 837/835' },
-    { label: 'Avg. Latency', value: '320ms', hint: 'stream pipelines' },
-    { label: 'AI Models', value: '28', hint: 'risk & quality' },
-  ];
+  const [metrics, setMetrics] = useState([
+    { label: 'EHR Feeds', value: '—', hint: '' },
+    { label: 'Claims/day', value: '—', hint: '' },
+    { label: 'Avg. Latency', value: '—', hint: '' },
+    { label: 'AI Models', value: '—', hint: '' },
+  ])
+  const [status, setStatus] = useState('loading')
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
+        const res = await fetch(`${baseUrl}/api/metrics`)
+        if (!res.ok) throw new Error('Failed to load metrics')
+        const data = await res.json()
+        if (data && Array.isArray(data.metrics)) {
+          setMetrics(data.metrics)
+        }
+        setStatus('ok')
+      } catch (e) {
+        setStatus('error')
+      }
+    }
+    fetchMetrics()
+  }, [])
 
   return (
     <section id="insights" className="relative w-full bg-slate-950 py-20">
@@ -30,6 +51,7 @@ function Insights() {
               ))}
               <div className="col-span-full rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-500/10 to-sky-500/10 p-6">
                 <div className="text-sm text-slate-300">Smart anomaly detection is highlighting increased admission rates in region 2. Suggested action: expand care navigation teams and update predictive model thresholds.</div>
+                {status === 'error' && <div className="mt-2 text-xs text-rose-300">Live metrics unavailable. Showing placeholders.</div>}
               </div>
             </div>
           </div>
